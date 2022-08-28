@@ -20,7 +20,7 @@ public Extension __ext_a2sqcache =
 };
 
 #if !defined REQUIRE_EXTENSIONS
-public __ext_a2sqcache_SetNTVOptional()
+public void __ext_a2sqcache_SetNTVOptional()
 {
 }
 #endif
