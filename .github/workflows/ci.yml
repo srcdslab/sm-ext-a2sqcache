@@ -27,12 +27,12 @@ jobs:
         uses: actions/setup-python@v2
 
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           path: extension
 
       - name: Checkout SourceMod
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: alliedmodders/sourcemod
           ref: ${{ matrix.sourcemod-version }}
@@ -40,13 +40,13 @@ jobs:
           submodules: recursive
 
       - name: Checkout AMBuild
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: alliedmodders/ambuild
           path: ambuild
 
       - name: Checkout sm-ext-common
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: srcdslab/sm-ext-common
           path: sourcemod/extensions/sm-ext-common
