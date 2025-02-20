@@ -52,6 +52,19 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+enum
+{
+	NS_CLIENT = 0,	// client socket
+	NS_SERVER,	// server socket
+	NS_HLTV,
+	NS_MATCHMAKING,
+	NS_SYSTEMLINK,
+#ifdef LINUX
+	NS_SVLAN,	// LAN udp port for Linux. See NET_OpenSockets for info.
+#endif
+	MAX_SOCKETS
+};
+
 size_t
 strlcpy(char *dst, const char *src, size_t dsize)
 {
@@ -156,6 +169,32 @@ typedef struct
 #endif
 } netsocket_t;
 
+class CSteam3Server
+{
+public:
+	void *m_pSteamClient;
+	ISteamGameServer *m_pSteamGameServer;
+	void *m_pSteamGameServerUtils;
+	void *m_pSteamGameServerNetworking;
+	void *m_pSteamGameServerStats;
+	void *m_pSteamHTTP;
+	void *m_pSteamInventory;
+	void *m_pSteamUGC;
+	void *m_pSteamApps;
+} *g_pSteam3Server;
+
+typedef CSteam3Server *(*Steam3ServerFunc)();
+
+Steam3ServerFunc g_pSteam3ServerFunc = NULL;
+
+CSteam3Server *Steam3Server()
+{
+	if (!g_pSteam3ServerFunc)
+		return NULL;
+
+	return g_pSteam3ServerFunc();
+}
+
 CUtlVector<netsocket_t> *net_sockets;
 int g_ServerUDPSocket = 0;
 
@@ -256,7 +295,7 @@ void UpdateQueryCache()
 #endif
 
 	info.nPassword = iserver->GetPassword() ? 1 : 0;
-	info.bIsSecure = true;
+	info.bIsSecure = g_pSteam3Server->m_pSteamGameServer->BSecure() ? 1 : 0;
 
 	if(!(info.nNewFlags & S2A_EXTRA_DATA_HAS_STEAMID) && engine->GetGameServerSteamID())
 	{
@@ -276,7 +315,7 @@ void UpdateQueryCache()
 			IServer *ihltvserver = hltv->GetBaseServer();
 			if(ihltvserver)
 			{
-				info.iHLTVUDPPort = ihltvserver->GetUDPPort();
+				info.iHLTVUDPPort = ihltvserver->GetLocalUDPPort();
 				info.aHLTVNameLen = strlcpy(info.aHLTVName, ihltvserver->GetName(), sizeof(info.aHLTVName));
 				info.nNewFlags |= S2A_EXTRA_DATA_HAS_SPECTATOR_DATA;
 			}
@@ -416,10 +455,8 @@ void SendA2S_Info(netpacket_t * packet)
 	// Password?
 	buf.PutUnsignedChar( iserver->GetPassword() ? 1 : 0 );
 
-	// buf.PutUnsignedChar( Steam3Server().BSecure() ? 1 : 0 );
-
 	// Secure?
-	buf.PutUnsignedChar( 1 );
+	buf.PutUnsignedChar( g_pSteam3Server->m_pSteamGameServer->BSecure() ? 1 : 0 );
 
 	buf.PutString( g_QueryCache.info.aVersion );
 
@@ -432,7 +469,7 @@ void SendA2S_Info(netpacket_t * packet)
 	// Write the rest of the data.
 	if ( g_QueryCache.info.nNewFlags & S2A_EXTRA_DATA_HAS_GAME_PORT )
 	{
-		buf.PutShort( LittleWord( iserver->GetUDPPort() ) );
+		buf.PutShort( LittleWord( iserver->GetLocalUDPPort() ) );
 	}
 
 #if SOURCE_ENGINE <= SE_CSGO
@@ -604,6 +641,48 @@ bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
 	}
 #endif
 
+#ifndef WIN32
+	if (!g_pGameConf->GetMemSig("Steam3Server", (void **)(&g_pSteam3ServerFunc)) || !g_pSteam3ServerFunc)
+	{
+		snprintf(error, maxlen, "Failed to find Steam3Server function.\n");
+		return false;
+	}
+#else
+	void *address;
+	if (!g_pGameConf->GetMemSig("CBaseServer__CheckMasterServerRequestRestart", &address) || !address)
+	{
+		snprintf(error, maxlen, "Failed to find CBaseServer__CheckMasterServerRequestRestart function.\n");
+		return false;
+	}
+
+	int steam3ServerFuncOffset = 0;
+	if (!g_pGameConf->GetOffset("CheckMasterServerRequestRestart_Steam3ServerFuncOffset", &steam3ServerFuncOffset) || steam3ServerFuncOffset == 0)
+	{
+		snprintf(error, maxlen, "Failed to find CheckMasterServerRequestRestart_Steam3ServerFuncOffset offset.\n");
+		return false;
+	}
+
+	//META_CONPRINTF("CheckMasterServerRequestRestart: %p\n", address);
+	address = (void *)((intptr_t)address + steam3ServerFuncOffset);
+	intptr_t offset = (intptr_t)(*(void **)address); // Get offset
+
+	g_pSteam3ServerFunc = (Steam3ServerFunc)((intptr_t)address + offset + sizeof(intptr_t));
+	//META_CONPRINTF("Steam3Server: %p\n", g_pSteam3ServerFunc);
+#endif
+
+	g_pSteam3Server = Steam3Server();
+	if (!g_pSteam3Server)
+	{
+		snprintf(error, maxlen, "Unable to get Steam3Server singleton.\n");
+		return false;
+	}
+
+	if (!g_pSteam3Server->m_pSteamGameServer)
+	{
+		snprintf(error, maxlen, "Unable to get Steam Game Server.\n");
+		return false;
+	}
+
 	CDetourManager::Init(g_pSM->GetScriptingEngine(), g_pGameConf);
 
 	g_Detour_CBaseServer__InactivateClients = DETOUR_CREATE_MEMBER(CBaseServer__InactivateClients, "CBaseServer__InactivateClients");
@@ -680,8 +759,7 @@ void A2SQCache::SDK_OnAllLoaded()
 		return;
 	}
 
-	int socknum = 1; // NS_SERVER
-	g_ServerUDPSocket = (*net_sockets)[socknum].hUDP;
+	g_ServerUDPSocket = (*net_sockets)[NS_SERVER].hUDP;
 
 	if(!g_ServerUDPSocket)
 	{
@@ -715,7 +793,7 @@ void A2SQCache::SDK_OnAllLoaded()
 	info.aVersionLen = snprintf(info.aVersion, sizeof(info.aVersion), "%d", engine->GetServerVersion());
 #endif
 
-	info.iUDPPort = iserver->GetUDPPort();
+	info.iUDPPort = iserver->GetLocalUDPPort();
 	info.nNewFlags |= S2A_EXTRA_DATA_HAS_GAME_PORT;
 
 	info.iGameID = info.iSteamAppID;

@@ -37,6 +37,19 @@
 
 		"Signatures"
 		{
+			"Steam3Server"
+			{
+				"library"       "engine"
+				"linux"         "@_Z12Steam3Serverv"
+				"linux64"       "@_Z12Steam3Serverv"
+			}
+
+			"CBaseServer__CheckMasterServerRequestRestart"
+			{
+				"library"       "engine"
+				"windows"       "\xE8\x2A\x2A\x2A\x2A\x83\x78\x04\x00\x74\x2A\xE8\x2A\x2A\x2A\x2A\x8B\x48\x04\x8B\x01\x8B\x40\x2C\xFF\xD0\x84\xC0\x74\x2A\x56"
+			}
+
 			"net_sockets"
 			{
 				"library"		"engine"
@@ -74,6 +87,11 @@
 			{
 				"windows"		"1"
 				"linux"			"2"
+			}
+
+			"CheckMasterServerRequestRestart_Steam3ServerFuncOffset"
+			{
+				"windows"		"1"
 			}
 		}
 	}
