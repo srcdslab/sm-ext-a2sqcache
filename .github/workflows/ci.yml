@@ -64,7 +64,7 @@ jobs:
           fetch-depth: 0
           path: extension
         
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Cache dependencies
         if: ${{ ! startsWith(github.ref, 'refs/tags/') }}
         env:
