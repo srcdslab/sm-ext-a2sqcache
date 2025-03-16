@@ -1,0 +1,100 @@
+"Games"
+{
+	"#default"
+	{
+		"#supported"
+		{
+			"engine"    "dods"
+			"engine"    "css"
+			"engine"    "hl2dm"
+			"engine"    "tf2"
+		}
+
+		"Addresses"
+		{
+			"net_sockets"
+			{
+				"linux"
+				{
+					"signature"	"net_sockets"
+				}
+			}
+
+			"net_time"
+			{
+				"linux"
+				{
+					"signature"	"net_time"
+				}
+			}
+
+			"s_queryRateChecker"
+			{
+				"linux"
+				{
+					"signature"	"s_queryRateChecker"
+				}
+			}
+		}
+
+		"Signatures"
+		{
+			"Steam3Server"
+			{
+				"library"       "engine"
+				"linux"         "@_Z12Steam3Serverv"
+				"linux64"       "@_Z12Steam3Serverv"
+			}
+
+			"CBaseServer__CheckMasterServerRequestRestart"
+			{
+				"library"       "engine"
+				"windows"       "\xE8\x2A\x2A\x2A\x2A\x83\x78\x04\x00\x74\x2A\xE8\x2A\x2A\x2A\x2A\x8B\x48\x04\x8B\x01\x8B\x40\x2C\xFF\xD0\x84\xC0\x74\x2A\x56"
+			}
+
+			"net_sockets"
+			{
+				"library"		"engine"
+				"linux"			"@_ZL11net_sockets"
+			}
+
+			"net_time"
+			{
+				"library"		"engine"
+				"linux"			"@net_time"
+			}
+
+			"s_queryRateChecker"
+			{
+				"library"		"engine"
+				"linux"			"@_ZL18s_queryRateChecker"
+			}
+
+			"CIPRateLimit__CheckIP"
+			{
+				"library"		"engine"
+				"linux"			"@_ZN12CIPRateLimit7CheckIPE8netadr_s"
+			}
+
+			"CBaseServer__InactivateClients"
+			{
+				"library"		"engine"
+				"linux"			"@_ZN11CBaseServer17InactivateClientsEv"
+			}
+		}
+
+		"Offsets"
+		{
+			"IServer__ProcessConnectionlessPacket"
+			{
+				"windows"		"1"
+				"linux"			"2"
+			}
+
+			"CheckMasterServerRequestRestart_Steam3ServerFuncOffset"
+			{
+				"windows"		"1"
+			}
+		}
+	}
+}

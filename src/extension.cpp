@@ -30,7 +30,7 @@
  */
 
 #include "extension.h"
-#include "extensionHelper.h"
+#include "convarhelper.h"
 #include "CDetour/detours.h"
 #include "steam/steam_gameserver.h"
 #include "sm_namehashset.h"
@@ -49,8 +49,15 @@
 #include <ihltvdirector.h>
 #include <ihltv.h>
 #include <inetchannelinfo.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
+
+#ifdef _WIN32
+	#include <winsock2.h>
+	#include <ws2tcpip.h>
+	#pragma comment(lib, "ws2_32.lib") // Auto-link Winsock library
+#else
+	#include <sys/socket.h>
+	#include <netinet/in.h>
+#endif
 
 enum
 {
