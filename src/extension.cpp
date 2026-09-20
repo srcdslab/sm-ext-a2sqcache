@@ -641,7 +641,6 @@ bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
 		return false;
 	}
 #else
-/*
 	void *s_queryRateChecker_baseAddr = NULL;
 	if(!g_pGameConf->GetMemSig("s_queryRateChecker", &s_queryRateChecker_baseAddr) || !s_queryRateChecker_baseAddr)
 	{
@@ -692,7 +691,14 @@ bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
 
 	uintptr_t net_time_instructions = reinterpret_cast<uintptr_t>(net_time_baseAddr);
 	net_time = reinterpret_cast<double *>(*reinterpret_cast<uintptr_t *>(net_time_instructions + net_time_offset));
-*/
+
+	int count = *(int *)((uint8_t *)net_sockets + 0x0C);
+	void *mem  = *(void **)net_sockets;
+	if (count < 1 || count > 16 || mem == NULL)
+	{
+		snprintf(error, maxlen, "net_sockets looks wrong: count=%d mem=%p\n", count, mem);
+		return false;
+	}
 #endif
 
 #if SOURCE_ENGINE == SE_CSGO
