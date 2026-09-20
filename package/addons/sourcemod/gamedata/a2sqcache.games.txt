@@ -102,7 +102,7 @@
 			}
 			"s_queryRateChecker"
 			{
-				"windows"		"21"
+				"windows"		"22"
 			}
 		}
 	}
