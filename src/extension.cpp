@@ -626,6 +626,7 @@ bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
 	uintptr_t engineBase = reinterpret_cast<uintptr_t>(GetModuleHandle("bin/engine.dll"));
 	smutils->LogMessage(myself, "Engine Address: %p", reinterpret_cast<void *>(engineBase));
 #endif
+#ifndef _WIN32
 	if(!g_pGameConf->GetAddress("s_queryRateChecker", &s_queryRateChecker) || !s_queryRateChecker)
 	{
 		snprintf(error, maxlen, "Failed to find s_queryRateChecker address.\n");
@@ -643,8 +644,58 @@ bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
 		snprintf(error, maxlen, "Failed to find net_time address.\n");
 		return false;
 	}
+#else
+	void *s_queryRateChecker_baseAddr = NULL;
+	if(!g_pGameConf->GetMemSig("s_queryRateChecker", &s_queryRateChecker_baseAddr) || !s_queryRateChecker_baseAddr)
+	{
+		snprintf(error, maxlen, "Failed to find base function address of s_queryRateChecker for windows.\n");
+		return false;
+	}
 
-#ifdef _WIN32
+	void *net_sockets_baseAddr = NULL;
+	if(!g_pGameConf->GetMemSig("net_sockets", &net_sockets_baseAddr) || !net_sockets_baseAddr)
+	{
+		snprintf(error, maxlen, "Failed to find base function address of net_sockets for windows.\n");
+		return false;
+	}
+
+	void *net_time_baseAddr = NULL;
+	if(!g_pGameConf->GetMemSig("net_time", &net_time_baseAddr) || !net_time_baseAddr)
+	{
+		snprintf(error, maxlen, "Failed to find base function address of net_time for windows.\n");
+		return false;
+	}
+
+	int s_queryRateChecker_offset;
+	if(!g_pGameConf->GetOffset("s_queryRateChecker", &s_queryRateChecker_offset))
+	{
+		snprintf(error, maxlen, "Failed to find offset for s_queryRateChecker for windows.\n");
+		return false;
+	}
+
+	int net_sockets_offset;
+	if(!g_pGameConf->GetOffset("net_sockets", &net_sockets_offset))
+	{
+		snprintf(error, maxlen, "Failed to find offset for net_sockets for windows.\n");
+		return false;
+	}
+
+	int net_time_offset;
+	if(!g_pGameConf->GetOffset("net_time", &net_time_offset))
+	{
+		snprintf(error, maxlen, "Failed to find offset for net_time for windows.\n");
+		return false;
+	}
+
+	uintptr_t s_queryRateChecker_instructions = reinterpret_cast<uintptr_t>(s_queryRateChecker_baseAddr);
+	s_queryRateChecker = reinterpret_cast<void *>(*reinterpret_cast<uintptr_t *>(s_queryRateChecker_instructions + s_queryRateChecker_offset));
+
+	uintptr_t net_sockets_instructions = reinterpret_cast<uintptr_t>(net_sockets_baseAddr);
+	net_sockets = reinterpret_cast<CUtlVector *>(*reinterpret_cast<uintptr_t *>(net_sockets_instructions + net_sockets_offset));
+
+	uintptr_t net_time_instructions = reinterpret_cast<uintptr_t>(net_time_baseAddr);
+	net_time = reinterpret_cast<double *>(*reinterpret_cast<uintptr_t *>(net_time_instructions + net_time_offset));
+
 	smutils->LogMessage(myself, "s_queryRateChecker: %p\nnet_sockets: %p\nnet_time: %p",
 		s_queryRateChecker, net_sockets, net_time
 	);
