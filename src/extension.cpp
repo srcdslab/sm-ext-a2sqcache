@@ -648,34 +648,11 @@ bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
 	}
 #endif
 
-#ifndef WIN32
 	if (!g_pGameConf->GetMemSig("Steam3Server", (void **)(&g_pSteam3ServerFunc)) || !g_pSteam3ServerFunc)
 	{
 		snprintf(error, maxlen, "Failed to find Steam3Server function.\n");
 		return false;
 	}
-#else
-	void *address;
-	if (!g_pGameConf->GetMemSig("CBaseServer__CheckMasterServerRequestRestart", &address) || !address)
-	{
-		snprintf(error, maxlen, "Failed to find CBaseServer__CheckMasterServerRequestRestart function.\n");
-		return false;
-	}
-
-	int steam3ServerFuncOffset = 0;
-	if (!g_pGameConf->GetOffset("CheckMasterServerRequestRestart_Steam3ServerFuncOffset", &steam3ServerFuncOffset) || steam3ServerFuncOffset == 0)
-	{
-		snprintf(error, maxlen, "Failed to find CheckMasterServerRequestRestart_Steam3ServerFuncOffset offset.\n");
-		return false;
-	}
-
-	//META_CONPRINTF("CheckMasterServerRequestRestart: %p\n", address);
-	address = (void *)((intptr_t)address + steam3ServerFuncOffset);
-	intptr_t offset = (intptr_t)(*(void **)address); // Get offset
-
-	g_pSteam3ServerFunc = (Steam3ServerFunc)((intptr_t)address + offset + sizeof(intptr_t));
-	//META_CONPRINTF("Steam3Server: %p\n", g_pSteam3ServerFunc);
-#endif
 
 	g_pSteam3Server = Steam3Server();
 	if (!g_pSteam3Server)
