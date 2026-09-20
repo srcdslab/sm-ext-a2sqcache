@@ -688,7 +688,7 @@ bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
 
 	uintptr_t s_queryRateChecker_instructions = reinterpret_cast<uintptr_t>(s_queryRateChecker_baseAddr);
 	s_queryRateChecker = reinterpret_cast<void *>(*reinterpret_cast<uintptr_t *>(s_queryRateChecker_instructions + s_queryRateChecker_offset));
-	smutils->LogMessage(myself, "s_queryRateChecker address: %p", s_queryRateChecker)
+	smutils->LogMessage(myself, "s_queryRateChecker address: %p", s_queryRateChecker);
 
 	uintptr_t net_sockets_instructions = reinterpret_cast<uintptr_t>(net_sockets_baseAddr);
 	net_sockets = reinterpret_cast<CUtlVector<netsocket_t> *>(*reinterpret_cast<uintptr_t *>(net_sockets_instructions + net_sockets_offset));
