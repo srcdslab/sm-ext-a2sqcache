@@ -54,7 +54,6 @@
 
 		"Signatures"
 		{
-			// For linux only!
 			"Steam3Server"
 			{
 				"library"       "engine"
@@ -105,12 +104,6 @@
 			{
 				"windows"		"1"
 				"linux"			"2"
-			}
-
-			// For Windows only!
-			"CheckMasterServerRequestRestart_Steam3ServerFuncOffset"
-			{
-				"windows"		"1"
 			}
 		}
 	}

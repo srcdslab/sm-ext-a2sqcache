@@ -622,6 +622,10 @@ bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
 		return false;
 	}
 
+#ifdef _WIN32
+	uintptr_t engineBase = reinterpret_cast<uintptr_t>(GetModuleHandle("bin/engine.dll"));
+	smutils->LogMessage(myself, "Engine Address: %p", reinterpret_cast<void *>(engineBase));
+#endif
 	if(!g_pGameConf->GetAddress("s_queryRateChecker", &s_queryRateChecker) || !s_queryRateChecker)
 	{
 		snprintf(error, maxlen, "Failed to find s_queryRateChecker address.\n");
@@ -640,6 +644,11 @@ bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
 		return false;
 	}
 
+#ifdef _WIN32
+	smutils->LogMessage(myself, "s_queryRateChecker: %p\nnet_sockets: %p\nnet_time: %p",
+		s_queryRateChecker, net_sockets, net_time
+	);
+#endif
 #if SOURCE_ENGINE == SE_CSGO
 	if(!g_pGameConf->GetAddress("g_sVersionString", (void **)&g_sVersionString) || !g_sVersionString)
 	{
