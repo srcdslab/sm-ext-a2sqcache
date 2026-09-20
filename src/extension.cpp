@@ -687,14 +687,18 @@ bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
 		return false;
 	}
 
-	uintptr_t s_queryRateChecker_instructions = reinterpret_cast<uintptr_t>(s_queryRateChecker_baseAddr);
-	s_queryRateChecker = reinterpret_cast<void *>(*reinterpret_cast<uintptr_t *>(s_queryRateChecker_instructions + s_queryRateChecker_offset));
+	smutils->LogMessage(myself, "Base Addresses: s_queryRateChecker: %p\nnet_sockets: %p\nnet_time: %p",
+		s_queryRateChecker_baseAddr, net_sockets_baseAddr, net_time_baseAddr
+	);
 
-	uintptr_t net_sockets_instructions = reinterpret_cast<uintptr_t>(net_sockets_baseAddr);
-	net_sockets = reinterpret_cast<CUtlVector<netsocket_t> *>(*reinterpret_cast<uintptr_t *>(net_sockets_instructions + net_sockets_offset));
+	uint32_t s_queryRateChecker_instructions = reinterpret_cast<uint32_t>(s_queryRateChecker_baseAddr);
+	s_queryRateChecker = reinterpret_cast<void *>(*reinterpret_cast<uint32_t *>(s_queryRateChecker_instructions + s_queryRateChecker_offset));
 
-	uintptr_t net_time_instructions = reinterpret_cast<uintptr_t>(net_time_baseAddr);
-	net_time = reinterpret_cast<double *>(*reinterpret_cast<uintptr_t *>(net_time_instructions + net_time_offset));
+	uint32_t net_sockets_instructions = reinterpret_cast<uint32_t>(net_sockets_baseAddr);
+	net_sockets = reinterpret_cast<CUtlVector<netsocket_t> *>(*reinterpret_cast<uint32_t *>(net_sockets_instructions + net_sockets_offset));
+
+	uint32_t net_time_instructions = reinterpret_cast<uint32_t>(net_time_baseAddr);
+	net_time = reinterpret_cast<double *>(*reinterpret_cast<uint32_t *>(net_time_instructions + net_time_offset));
 
 	smutils->LogMessage(myself, "s_queryRateChecker: %p\nnet_sockets: %p\nnet_time: %p",
 		s_queryRateChecker, net_sockets, net_time

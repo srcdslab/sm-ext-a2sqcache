@@ -92,15 +92,15 @@
 			}
 
 			// Windows only!
-			"net_sockets_offset"
+			"net_sockets"
 			{
 				"windows"		"2"
 			}
-			"net_time_offset"
+			"net_time"
 			{
 				"windows"		"2"
 			}
-			"s_queryRateChecker_offset"
+			"s_queryRateChecker"
 			{
 				"windows"		"21"
 			}
