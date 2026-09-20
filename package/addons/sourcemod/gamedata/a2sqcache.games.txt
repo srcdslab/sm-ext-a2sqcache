@@ -18,6 +18,11 @@
 				{
 					"signature"	"net_sockets"
 				}
+				"windows"
+				{
+					"signature" "net_sockets"
+					"offset"	"2"
+				}
 			}
 
 			"net_time"
@@ -25,6 +30,11 @@
 				"linux"
 				{
 					"signature"	"net_time"
+				}
+				"windows"
+				{
+					"signature" "net_time"
+					"offset"	"2"
 				}
 			}
 
@@ -34,11 +44,17 @@
 				{
 					"signature"	"s_queryRateChecker"
 				}
+				"windows"
+				{
+					"signature" "s_queryRateChecker"
+					"offset"	"22"
+				}
 			}
 		}
 
 		"Signatures"
 		{
+			// For linux only!
 			"Steam3Server"
 			{
 				"library"       "engine"
@@ -46,6 +62,7 @@
 				"linux64"       "@_Z12Steam3Serverv"
 			}
 
+			// For windows only!
 			"CBaseServer__CheckMasterServerRequestRestart"
 			{
 				"library"       "engine"
@@ -56,30 +73,35 @@
 			{
 				"library"		"engine"
 				"linux"			"@_ZL11net_sockets"
+				"windows"		"\x50\xA1\x2A\x2A\x2A\x2A"
 			}
 
 			"net_time"
 			{
 				"library"		"engine"
 				"linux"			"@net_time"
+				"windows"		"\xDD\x05\x2A\x2A\x2A\x2A\x8B\x45\x08\x89\x47\x14\x8B\x45\x10\x89\x87\x2A\x2A\x2A\x2A\x8B\x45\xDC"
 			}
 
 			"s_queryRateChecker"
 			{
 				"library"		"engine"
 				"linux"			"@_ZL18s_queryRateChecker"
+				"windows" 		"\x8B\x06\x83\xEC\x0C\x8B\xCC\x89\x01\x8B\x46\x04\x89\x41\x04\x8B\x46\x08\x89\x41\x08\xB9\x2A\x2A\x2A\x2A\xE8\x2A\x2A\x2A\x2A\x84\xC0"
 			}
 
 			"CIPRateLimit__CheckIP"
 			{
 				"library"		"engine"
 				"linux"			"@_ZN12CIPRateLimit7CheckIPE8netadr_s"
+				"windows"		"\x55\x8B\xEC\x8B\x45\x08\x53\x83\xEC\x0C\x8B\xD4\x89\x02\x8B\x45\x0C\x89\x42\x04"
 			}
 
 			"CBaseServer__InactivateClients"
 			{
 				"library"		"engine"
 				"linux"			"@_ZN11CBaseServer17InactivateClientsEv"
+				"windows"		"\x55\x8B\xEC\x51\x53\x8B\xD9\x57\x33\xFF\x39\xBB\x2A\x2A\x2A\x2A\x7E"
 			}
 		}
 
@@ -91,6 +113,7 @@
 				"linux"			"2"
 			}
 
+			// For Windows only!
 			"CheckMasterServerRequestRestart_Steam3ServerFuncOffset"
 			{
 				"windows"		"1"
