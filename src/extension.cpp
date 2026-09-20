@@ -209,7 +209,12 @@ CDetour *g_Detour_CBaseServer__InactivateClients = NULL;
 SH_DECL_MANUALHOOK1(ProcessConnectionlessPacket, 0, 0, 0, bool, netpacket_t *); // virtual bool IServer::ProcessConnectionlessPacket( netpacket_t *packet ) = 0;
 
 void *s_queryRateChecker = NULL;
+#ifndef _WIN32
 bool (*CIPRateLimit__CheckIP)(void *pThis, netadr_t adr);
+#else
+bool (__thiscall *CIPRateLimit__CheckIP)(void *pThis, netadr_t adr);
+#endif
+
 //bool (*CBaseServer__ValidChallenge)(void *pThis, netadr_t adr, int challengeNr);
 
 struct CQueryCache

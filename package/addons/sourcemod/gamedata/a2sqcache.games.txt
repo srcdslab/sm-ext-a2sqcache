@@ -94,7 +94,7 @@
 			// Windows only!
 			"net_sockets"
 			{
-				"windows"		"2"
+				"windows"		"1"
 			}
 			"net_time"
 			{
