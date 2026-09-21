@@ -693,6 +693,10 @@ bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
 	uintptr_t engineBase = reinterpret_cast<uintptr_t>(hEngine);
 	smutils->LogMessage(myself, "Engine base: %p", engineBase);
 
+	uintptr_t s_queryRateChecker_instructions = reinterpret_cast<uintptr_t>(s_queryRateChecker_baseAddr);
+	uintptr_t net_sockets_instructions = reinterpret_cast<uintptr_t>(net_sockets_baseAddr);
+	uintptr_t net_time_instructions = reinterpret_cast<uintptr_t>(net_time_baseAddr);
+
 	int32_t s_queryRateChecker_disp = *reinterpret_cast<int32_t *>(s_queryRateChecker_instructions + s_queryRateChecker_offset);
 	s_queryRateChecker = reinterpret_cast<void *>((s_queryRateChecker_instructions + s_queryRateChecker_offset + 4) + s_queryRateChecker_disp);
 
