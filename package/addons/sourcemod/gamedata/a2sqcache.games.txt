@@ -44,42 +44,42 @@
 				"library"       "engine"
 				"linux"         "@_Z12Steam3Serverv"
 				"linux64"       "@_Z12Steam3Serverv"
-			}
-
-			"CBaseServer__CheckMasterServerRequestRestart"
-			{
-				"library"       "engine"
-				"windows"       "\xE8\x2A\x2A\x2A\x2A\x83\x78\x04\x00\x74\x2A\xE8\x2A\x2A\x2A\x2A\x8B\x48\x04\x8B\x01\x8B\x40\x2C\xFF\xD0\x84\xC0\x74\x2A\x56"
+				"windows"       "\xB8\x2A\x2A\x2A\x2A\xC3\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x55\x8B\xEC\x68\x2A\x2A\x2A\x2A\xFF\x15\x2A\x2A\x2A\x2A\x50"
 			}
 
 			"net_sockets"
 			{
 				"library"		"engine"
 				"linux"			"@_ZL11net_sockets"
+				"windows"		"\xA1\x2A\x2A\x2A\x2A\xBA\x2A\x2A\x2A\x2A\x80\x3D\x2A\x2A\x2A\x2A\x00\xB9"
 			}
 
 			"net_time"
 			{
 				"library"		"engine"
 				"linux"			"@net_time"
+				"windows"		"\xDD\x05\x2A\x2A\x2A\x2A\x8B\x45\x08\x89\x47\x14\x8B\x45\x10\x89\x87\x2A\x2A\x2A\x2A\x8B\x45\xDC"
 			}
 
 			"s_queryRateChecker"
 			{
 				"library"		"engine"
 				"linux"			"@_ZL18s_queryRateChecker"
+				"windows" 		"\x8B\x06\x83\xEC\x0C\x8B\xCC\x89\x01\x8B\x46\x04\x89\x41\x04\x8B\x46\x08\x89\x41\x08\xB9\x2A\x2A\x2A\x2A\xE8\x2A\x2A\x2A\x2A\x84\xC0"
 			}
 
 			"CIPRateLimit__CheckIP"
 			{
 				"library"		"engine"
 				"linux"			"@_ZN12CIPRateLimit7CheckIPE8netadr_s"
+				"windows"		"\x55\x8B\xEC\x8B\x45\x08\x53\x83\xEC\x0C\x8B\xD4\x89\x02\x8B\x45\x0C\x89\x42\x04"
 			}
 
 			"CBaseServer__InactivateClients"
 			{
 				"library"		"engine"
 				"linux"			"@_ZN11CBaseServer17InactivateClientsEv"
+				"windows"		"\x55\x8B\xEC\x51\x53\x8B\xD9\x57\x33\xFF\x39\xBB\x2A\x2A\x2A\x2A\x7E"
 			}
 		}
 
@@ -91,9 +91,18 @@
 				"linux"			"2"
 			}
 
-			"CheckMasterServerRequestRestart_Steam3ServerFuncOffset"
+			// Windows only!
+			"net_sockets"
 			{
 				"windows"		"1"
+			}
+			"net_time"
+			{
+				"windows"		"2"
+			}
+			"s_queryRateChecker"
+			{
+				"windows"		"22"
 			}
 		}
 	}
