@@ -694,20 +694,20 @@ bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
 
 #if defined KE_ARCH_X64
 	int32_t s_queryRateChecker_disp = *reinterpret_cast<int32_t *>(s_queryRateChecker_instructions + s_queryRateChecker_offset);
-	s_queryRateChecker = reinterpret_cast<void *>((s_queryRateChecker_instructions + s_queryRateChecker_offset + 3) + s_queryRateChecker_disp);
+	s_queryRateChecker = reinterpret_cast<void *>((s_queryRateChecker_instructions + s_queryRateChecker_offset + 4) + s_queryRateChecker_disp);
 
 	int32_t net_sockets_disp = *reinterpret_cast<int32_t *>(net_sockets_instructions + net_sockets_offset);
-	net_sockets = reinterpret_cast<CUtlVector<netsocket_t> *>((net_sockets_instructions + net_sockets_offset + 3) + net_sockets_disp);
+	net_sockets = reinterpret_cast<CUtlVector<netsocket_t> *>((net_sockets_instructions + net_sockets_offset + 4) + net_sockets_disp);
 
 	int32_t net_time_disp = *reinterpret_cast<int32_t *>(net_time_instructions + net_time_offset);
-	net_time = reinterpret_cast<double *>((net_time_instructions + net_time_offset + 3) + net_time_disp);
+	net_time = reinterpret_cast<double *>((net_time_instructions + net_time_offset + 4) + net_time_disp);
 #else
 	s_queryRateChecker = reinterpret_cast<void *>(*reinterpret_cast<uintptr_t *>(s_queryRateChecker_instructions + s_queryRateChecker_offset));
 
 	net_sockets = reinterpret_cast<CUtlVector<netsocket_t> *>(*reinterpret_cast<uintptr_t *>(net_sockets_instructions + net_sockets_offset));
 
 	net_time = reinterpret_cast<double *>(*reinterpret_cast<uintptr_t *>(net_time_instructions + net_time_offset));
-#endif
+#endif // KE_ARCH_X64
 
 	if (!s_queryRateChecker || !net_sockets || !net_time)
 	{
@@ -719,15 +719,9 @@ bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
     int count = *(int *)((uint8_t *)net_sockets + 0x10);
 #else
     int count = *(int *)((uint8_t *)net_sockets + 0x0C);
-#endif
+#endif // KE_ARCH_X64
 
-	void *mem = *(void **)net_sockets;
-	if (count < 1 || count > 16 || mem == NULL)
-	{
-		snprintf(error, maxlen, "net_sockets looks wrong: count=%d mem=%p\n", count, mem);
-		return false;
-	}
-#endif
+#endif // _WIN32
 
 #if SOURCE_ENGINE == SE_CSGO
 	if(!g_pGameConf->GetAddress("g_sVersionString", (void **)&g_sVersionString) || !g_sVersionString)
