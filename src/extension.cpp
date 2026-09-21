@@ -688,25 +688,29 @@ bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
 		return false;
 	}
 
-	// For testing purpose
-	HMODULE hEngine = GetModuleHandleA("bin/x64/engine.dll");
-	uintptr_t engineBase = reinterpret_cast<uintptr_t>(hEngine);
-	smutils->LogMessage(myself, "Engine base: %p", engineBase);
-
+#if defined KE_ARCH_X64
 	uintptr_t s_queryRateChecker_instructions = reinterpret_cast<uintptr_t>(s_queryRateChecker_baseAddr);
 	uintptr_t net_sockets_instructions = reinterpret_cast<uintptr_t>(net_sockets_baseAddr);
 	uintptr_t net_time_instructions = reinterpret_cast<uintptr_t>(net_time_baseAddr);
 
 	int32_t s_queryRateChecker_disp = *reinterpret_cast<int32_t *>(s_queryRateChecker_instructions + s_queryRateChecker_offset);
-	s_queryRateChecker = reinterpret_cast<void *>((s_queryRateChecker_instructions + s_queryRateChecker_offset + 4) + s_queryRateChecker_disp);
+	s_queryRateChecker = reinterpret_cast<void *>((s_queryRateChecker_instructions + s_queryRateChecker_offset + 3) + s_queryRateChecker_disp);
 
 	int32_t net_sockets_disp = *reinterpret_cast<int32_t *>(net_sockets_instructions + net_sockets_offset);
-	net_sockets = reinterpret_cast<CUtlVector<netsocket_t> *>((net_sockets_instructions + net_sockets_offset + 4) + net_sockets_disp);
+	net_sockets = reinterpret_cast<CUtlVector<netsocket_t> *>((net_sockets_instructions + net_sockets_offset + 3) + net_sockets_disp);
 
 	int32_t net_time_disp = *reinterpret_cast<int32_t *>(net_time_instructions + net_time_offset);
-	net_time = reinterpret_cast<double *>((net_time_instructions + net_time_offset + 4) + net_time_disp);
+	net_time = reinterpret_cast<double *>((net_time_instructions + net_time_offset + 3) + net_time_disp);
+#elif defined KE_ARCH_X86
+	uintptr_t s_queryRateChecker_instructions = reinterpret_cast<uintptr_t>(s_queryRateChecker_baseAddr);
+	s_queryRateChecker = reinterpret_cast<void *>(*reinterpret_cast<uintptr_t *>(s_queryRateChecker_instructions + s_queryRateChecker_offset));
 
-	smutils->LogMessage(myself, "s_queryRateChecker: %p\nnet_sockets: %p\nnet_time: %p", s_queryRateChecker, net_sockets, net_time);
+	uintptr_t net_sockets_instructions = reinterpret_cast<uintptr_t>(net_sockets_baseAddr);
+	net_sockets = reinterpret_cast<CUtlVector<netsocket_t> *>(*reinterpret_cast<uintptr_t *>(net_sockets_instructions + net_sockets_offset));
+
+	uintptr_t net_time_instructions = reinterpret_cast<uintptr_t>(net_time_baseAddr);
+	net_time = reinterpret_cast<double *>(*reinterpret_cast<uintptr_t *>(net_time_instructions + net_time_offset));
+#endif
 
 	if (!s_queryRateChecker || !net_sockets || !net_time)
 	{
@@ -714,8 +718,13 @@ bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
 		return false;
 	}
 
-	int count = *(int *)((uint8_t *)net_sockets + 0x0C);
-	void *mem  = *(void **)net_sockets;
+#if KE_ARCH_X64
+    int count = *(int *)((uint8_t *)net_sockets + 0x10);
+#else
+    int count = *(int *)((uint8_t *)net_sockets + 0x0C);
+#endif
+
+	void *mem = *(void **)net_sockets;
 	if (count < 1 || count > 16 || mem == NULL)
 	{
 		snprintf(error, maxlen, "net_sockets looks wrong: count=%d mem=%p\n", count, mem);
