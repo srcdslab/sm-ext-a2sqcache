@@ -113,6 +113,8 @@
 			{
 				"windows"		"1"
 				"linux"			"2"
+				"windows64"		"1"
+				"linux64"		"2"
 			}
 
 			// Windows only!
