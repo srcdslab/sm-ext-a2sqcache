@@ -697,6 +697,12 @@ bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
 	uintptr_t net_time_instructions = reinterpret_cast<uintptr_t>(net_time_baseAddr);
 	net_time = reinterpret_cast<double *>(*reinterpret_cast<uintptr_t *>(net_time_instructions + net_time_offset));
 
+	if (!s_queryRateChecker || !net_sockets || !net_time)
+	{
+		snprintf(error, maxlen, "Failed to resolve Windows globals.\n");
+		return false;
+	}
+
 	int count = *(int *)((uint8_t *)net_sockets + 0x0C);
 	void *mem  = *(void **)net_sockets;
 	if (count < 1 || count > 16 || mem == NULL)
