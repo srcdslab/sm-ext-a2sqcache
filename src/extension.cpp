@@ -688,6 +688,11 @@ bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
 		return false;
 	}
 
+	// For testing purpose
+	HMODULE hEngine = GetModuleHandleW("bin/x64/engine.dll");
+	uintptr_t engineBase = reinterpret_cast<uintptr_t>(hEngine);
+	smutils->LogMessage(myself, "Engine base: %p", engineBase);
+
 	uintptr_t s_queryRateChecker_instructions = reinterpret_cast<uintptr_t>(s_queryRateChecker_baseAddr);
 	s_queryRateChecker = reinterpret_cast<void *>(*reinterpret_cast<uintptr_t *>(s_queryRateChecker_instructions + s_queryRateChecker_offset));
 
@@ -696,6 +701,8 @@ bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
 
 	uintptr_t net_time_instructions = reinterpret_cast<uintptr_t>(net_time_baseAddr);
 	net_time = reinterpret_cast<double *>(*reinterpret_cast<uintptr_t *>(net_time_instructions + net_time_offset));
+
+	smutils->LogMessage(myself, "s_queryRateChecker: %p\nnet_sockets: %p\nnet_time: %p", s_queryRateChecker, net_sockets, net_time);
 
 	if (!s_queryRateChecker || !net_sockets || !net_time)
 	{
