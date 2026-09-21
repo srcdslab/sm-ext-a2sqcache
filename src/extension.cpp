@@ -689,7 +689,7 @@ bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
 	}
 
 	// For testing purpose
-	HMODULE hEngine = GetModuleHandleW("bin/x64/engine.dll");
+	HMODULE hEngine = GetModuleHandleA("bin/x64/engine.dll");
 	uintptr_t engineBase = reinterpret_cast<uintptr_t>(hEngine);
 	smutils->LogMessage(myself, "Engine base: %p", engineBase);
 
