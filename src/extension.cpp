@@ -688,11 +688,11 @@ bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
 		return false;
 	}
 
-#if defined KE_ARCH_X64
 	uintptr_t s_queryRateChecker_instructions = reinterpret_cast<uintptr_t>(s_queryRateChecker_baseAddr);
 	uintptr_t net_sockets_instructions = reinterpret_cast<uintptr_t>(net_sockets_baseAddr);
 	uintptr_t net_time_instructions = reinterpret_cast<uintptr_t>(net_time_baseAddr);
 
+#if defined KE_ARCH_X64
 	int32_t s_queryRateChecker_disp = *reinterpret_cast<int32_t *>(s_queryRateChecker_instructions + s_queryRateChecker_offset);
 	s_queryRateChecker = reinterpret_cast<void *>((s_queryRateChecker_instructions + s_queryRateChecker_offset + 3) + s_queryRateChecker_disp);
 
@@ -701,14 +701,11 @@ bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
 
 	int32_t net_time_disp = *reinterpret_cast<int32_t *>(net_time_instructions + net_time_offset);
 	net_time = reinterpret_cast<double *>((net_time_instructions + net_time_offset + 3) + net_time_disp);
-#elif defined KE_ARCH_X86
-	uintptr_t s_queryRateChecker_instructions = reinterpret_cast<uintptr_t>(s_queryRateChecker_baseAddr);
+#else
 	s_queryRateChecker = reinterpret_cast<void *>(*reinterpret_cast<uintptr_t *>(s_queryRateChecker_instructions + s_queryRateChecker_offset));
 
-	uintptr_t net_sockets_instructions = reinterpret_cast<uintptr_t>(net_sockets_baseAddr);
 	net_sockets = reinterpret_cast<CUtlVector<netsocket_t> *>(*reinterpret_cast<uintptr_t *>(net_sockets_instructions + net_sockets_offset));
 
-	uintptr_t net_time_instructions = reinterpret_cast<uintptr_t>(net_time_baseAddr);
 	net_time = reinterpret_cast<double *>(*reinterpret_cast<uintptr_t *>(net_time_instructions + net_time_offset));
 #endif
 
@@ -718,7 +715,7 @@ bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
 		return false;
 	}
 
-#if KE_ARCH_X64
+#if defined KE_ARCH_X64
     int count = *(int *)((uint8_t *)net_sockets + 0x10);
 #else
     int count = *(int *)((uint8_t *)net_sockets + 0x0C);
