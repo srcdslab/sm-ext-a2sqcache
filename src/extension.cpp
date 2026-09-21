@@ -693,14 +693,14 @@ bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
 	uintptr_t engineBase = reinterpret_cast<uintptr_t>(hEngine);
 	smutils->LogMessage(myself, "Engine base: %p", engineBase);
 
-	uintptr_t s_queryRateChecker_instructions = reinterpret_cast<uintptr_t>(s_queryRateChecker_baseAddr);
-	s_queryRateChecker = reinterpret_cast<void *>(*reinterpret_cast<uintptr_t *>(s_queryRateChecker_instructions + s_queryRateChecker_offset));
+	int32_t s_queryRateChecker_disp = *reinterpret_cast<int32_t *>(s_queryRateChecker_instructions + s_queryRateChecker_offset);
+	s_queryRateChecker = reinterpret_cast<void *>((s_queryRateChecker_instructions + s_queryRateChecker_offset + 4) + s_queryRateChecker_disp);
 
-	uintptr_t net_sockets_instructions = reinterpret_cast<uintptr_t>(net_sockets_baseAddr);
-	net_sockets = reinterpret_cast<CUtlVector<netsocket_t> *>(*reinterpret_cast<uintptr_t *>(net_sockets_instructions + net_sockets_offset));
+	int32_t net_sockets_disp = *reinterpret_cast<int32_t *>(net_sockets_instructions + net_sockets_offset);
+	net_sockets = reinterpret_cast<CUtlVector<netsocket_t> *>((net_sockets_instructions + net_sockets_offset + 4) + net_sockets_disp);
 
-	uintptr_t net_time_instructions = reinterpret_cast<uintptr_t>(net_time_baseAddr);
-	net_time = reinterpret_cast<double *>(*reinterpret_cast<uintptr_t *>(net_time_instructions + net_time_offset));
+	int32_t net_time_disp = *reinterpret_cast<int32_t *>(net_time_instructions + net_time_offset);
+	net_time = reinterpret_cast<double *>((net_time_instructions + net_time_offset + 4) + net_time_disp);
 
 	smutils->LogMessage(myself, "s_queryRateChecker: %p\nnet_sockets: %p\nnet_time: %p", s_queryRateChecker, net_sockets, net_time);
 

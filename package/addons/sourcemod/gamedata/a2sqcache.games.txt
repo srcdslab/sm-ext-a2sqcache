@@ -119,17 +119,17 @@
 			"net_sockets"
 			{
 				"windows"		"1"
-				"windows64"		"9"
+				"windows64"		"10"
 			}
 			"net_time"
 			{
 				"windows"		"2"
-				"windows64"		"4"
+				"windows64"		"5"
 			}
 			"s_queryRateChecker"
 			{
 				"windows"		"22"
-				"windows64"		"18"
+				"windows64"		"19"
 			}
 		}
 	}
