@@ -10,11 +10,16 @@
 			"engine"    "tf2"
 		}
 
+		// For Linux only!
 		"Addresses"
 		{
 			"net_sockets"
 			{
 				"linux"
+				{
+					"signature"	"net_sockets"
+				}
+				"linux64"
 				{
 					"signature"	"net_sockets"
 				}
@@ -26,11 +31,19 @@
 				{
 					"signature"	"net_time"
 				}
+				"linux64"
+				{
+					"signature"	"net_time"
+				}
 			}
 
 			"s_queryRateChecker"
 			{
 				"linux"
+				{
+					"signature"	"s_queryRateChecker"
+				}
+				"linux64"
 				{
 					"signature"	"s_queryRateChecker"
 				}
@@ -45,41 +58,52 @@
 				"linux"         "@_Z12Steam3Serverv"
 				"linux64"       "@_Z12Steam3Serverv"
 				"windows"       "\xB8\x2A\x2A\x2A\x2A\xC3\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x55\x8B\xEC\x68\x2A\x2A\x2A\x2A\xFF\x15\x2A\x2A\x2A\x2A\x50"
+				"windows64"		"\x48\x8D\x05\x2A\x2A\x2A\x2A\xC3\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x40\x53\x48\x83\xEC\x20\x48\x8B\xD9\xFF\x15\x2A\x2A\x2A\x2A\x8B\xC8"
 			}
 
 			"net_sockets"
 			{
 				"library"		"engine"
 				"linux"			"@_ZL11net_sockets"
+				"linux64"		"@_ZL11net_sockets"
 				"windows"		"\xA1\x2A\x2A\x2A\x2A\xBA\x2A\x2A\x2A\x2A\x80\x3D\x2A\x2A\x2A\x2A\x00\xB9"
+				"windows64"		"\xFF\x15\x2A\x2A\x2A\x2A\x48\x8B\x15\x2A\x2A\x2A\x2A\x48\x8D\x05"
 			}
 
 			"net_time"
 			{
 				"library"		"engine"
 				"linux"			"@net_time"
+				"linux64"		"@net_time"
 				"windows"		"\xDD\x05\x2A\x2A\x2A\x2A\x8B\x45\x08\x89\x47\x14\x8B\x45\x10\x89\x87\x2A\x2A\x2A\x2A\x8B\x45\xDC"
+				"windows64"		"\xF2\x0F\x10\x05\x2A\x2A\x2A\x2A\x4C\x8D\x44\x24\x50\x8B\x44\x24\x70\x33\xC9"
 			}
 
 			"s_queryRateChecker"
 			{
 				"library"		"engine"
 				"linux"			"@_ZL18s_queryRateChecker"
+				"linux64"		"@_ZL18s_queryRateChecker"
 				"windows" 		"\x8B\x06\x83\xEC\x0C\x8B\xCC\x89\x01\x8B\x46\x04\x89\x41\x04\x8B\x46\x08\x89\x41\x08\xB9\x2A\x2A\x2A\x2A\xE8\x2A\x2A\x2A\x2A\x84\xC0"
+				"windows64"		"\xF2\x41\x0F\x10\x45\x00\x48\x8D\x54\x24\x70\x41\x8B\x45\x08\x48\x8D\x0D\x2A\x2A\x2A\x2A\xF2\x0F\x11\x44\x24\x70\x89\x44\x24\x78\xE8\x2A\x2A\x2A\x2A\x84\xC0\x0F\x84\x2A\x2A\x2A\x2A\xE8\x2A\x2A\x2A\x2A\x48\x39\x78\x08"
 			}
 
 			"CIPRateLimit__CheckIP"
 			{
 				"library"		"engine"
 				"linux"			"@_ZN12CIPRateLimit7CheckIPE8netadr_s"
+				"linux64"		"@_ZN12CIPRateLimit7CheckIPE8netadr_s"
 				"windows"		"\x55\x8B\xEC\x8B\x45\x08\x53\x83\xEC\x0C\x8B\xD4\x89\x02\x8B\x45\x0C\x89\x42\x04"
+				"windows64"		"\x48\x89\x5C\x24\x08\x57\x48\x83\xEC\x30\xF2\x0F\x10\x02\x48\x8B\xFA"
 			}
 
 			"CBaseServer__InactivateClients"
 			{
 				"library"		"engine"
 				"linux"			"@_ZN11CBaseServer17InactivateClientsEv"
+				"linux64"		"@_ZN11CBaseServer17InactivateClientsEv"
 				"windows"		"\x55\x8B\xEC\x51\x53\x8B\xD9\x57\x33\xFF\x39\xBB\x2A\x2A\x2A\x2A\x7E"
+				"windows64"		"\x48\x89\x74\x24\x18\x57\x48\x83\xEC\x20\x33\xFF\x48\x8B\xF1\x39\xB9\x2A\x2A\x2A\x2A\x0F\x8E"
 			}
 		}
 
@@ -89,20 +113,25 @@
 			{
 				"windows"		"1"
 				"linux"			"2"
+				"windows64"		"1"
+				"linux64"		"2"
 			}
 
 			// Windows only!
 			"net_sockets"
 			{
 				"windows"		"1"
+				"windows64"		"9"
 			}
 			"net_time"
 			{
 				"windows"		"2"
+				"windows64"		"4"
 			}
 			"s_queryRateChecker"
 			{
 				"windows"		"22"
+				"windows64"		"18"
 			}
 		}
 	}
