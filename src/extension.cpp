@@ -614,7 +614,7 @@ T ResolveRipRelative(void *base, int offset)
 {
 	uintptr_t operand = reinterpret_cast<uintptr_t>(base) + offset;
 	int32_t disp;
-	memcpy(&disp, reinterpret_cast<void *>(operand), sizeof(disp));
+	std::memcpy(&disp, reinterpret_cast<void *>(operand), sizeof(disp));
 	return reinterpret_cast<T>(operand + sizeof(disp) + disp);
 }
 
@@ -697,10 +697,6 @@ bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
 		return false;
 	}
 
-	uintptr_t s_queryRateChecker_instructions = reinterpret_cast<uintptr_t>(s_queryRateChecker_baseAddr);
-	uintptr_t net_sockets_instructions = reinterpret_cast<uintptr_t>(net_sockets_baseAddr);
-	uintptr_t net_time_instructions = reinterpret_cast<uintptr_t>(net_time_baseAddr);
-
 #if defined KE_ARCH_X64
 	s_queryRateChecker = ResolveRipRelative<void *>(s_queryRateChecker_baseAddr, s_queryRateChecker_offset);
 
@@ -708,6 +704,10 @@ bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
 
 	net_time = ResolveRipRelative<double *>(net_time_baseAddr, net_time_offset);
 #else
+	uintptr_t s_queryRateChecker_instructions = reinterpret_cast<uintptr_t>(s_queryRateChecker_baseAddr);
+	uintptr_t net_sockets_instructions = reinterpret_cast<uintptr_t>(net_sockets_baseAddr);
+	uintptr_t net_time_instructions = reinterpret_cast<uintptr_t>(net_time_baseAddr);
+
 	s_queryRateChecker = reinterpret_cast<void *>(*reinterpret_cast<uintptr_t *>(s_queryRateChecker_instructions + s_queryRateChecker_offset));
 
 	net_sockets = reinterpret_cast<CUtlVector<netsocket_t> *>(*reinterpret_cast<uintptr_t *>(net_sockets_instructions + net_sockets_offset));
