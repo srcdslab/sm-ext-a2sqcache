@@ -614,7 +614,7 @@ T ResolveRipRelative(void *base, int offset)
 {
 	uintptr_t operand = reinterpret_cast<uintptr_t>(base) + offset;
 	int32_t disp;
-	std::memcpy(&disp, reinterpret_cast<void *>(operand), sizeof(disp));
+	memcpy(&disp, reinterpret_cast<void *>(operand), sizeof(disp));
 	return reinterpret_cast<T>(operand + sizeof(disp) + disp);
 }
 
