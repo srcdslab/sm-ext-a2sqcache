@@ -37,6 +37,7 @@
 #include "proto_oob.h"
 #include "protocol.h"
 #include "inetworksystem.h"
+#include "siphash.h"
 #include <strtools.h>
 #include <utlbuffer.h>
 #include <sourcehook.h>
@@ -54,9 +55,13 @@
 	#include <winsock2.h>
 	#include <ws2tcpip.h>
 	#pragma comment(lib, "ws2_32.lib") // Auto-link Winsock library
+	#include <bcrypt.h>
+	#pragma comment(lib, "bcrypt.lib") // BCryptGenRandom
 #else
 	#include <sys/socket.h>
 	#include <netinet/in.h>
+	#include <fcntl.h>
+	#include <unistd.h>
 #endif
 
 enum
@@ -111,7 +116,8 @@ SMEXT_LINK(&g_A2SQCache);
 ConVar *g_SvLogging = CreateConVar("sv_qcache_logging", "0", FCVAR_NOTIFY, "Log connection checks.");
 ConVar *g_SvPacketSizeCheck = CreateConVar("sv_qcache_packet_size_check", "1", FCVAR_NOTIFY, "Check correct packet sizes.");
 ConVar *g_SvIPRateLimit = CreateConVar("sv_qcache_iprate_limit", "1", FCVAR_NOTIFY, "Temporarily ban spam requests.");
-ConVar *g_SvValidateChallenge = CreateConVar("sv_qcache_validate_info_challenge", "1", FCVAR_NOTIFY, "Check if the a2s_info challenge is valid.");
+ConVar *g_SvValidateChallenge = CreateConVar("sv_qcache_validate_info_challenge", "1", FCVAR_NOTIFY, "Check that the a2s_info payload is \"Source Engine Query\". String check only, the anti-spoofing challenge is sv_qcache_a2s_challenge.");
+ConVar *g_SvA2SChallenge = CreateConVar("sv_qcache_a2s_challenge", "1", FCVAR_NOTIFY, "Require a keyed anti-spoofing challenge (S2C_CHALLENGE) before answering a2s_info and a2s_player. Disable = '0' restores the legacy behaviour (UDP reflection possible).");
 ConVar *g_SvGameDesc = CreateConVar("sv_gamedesc_override", "default", FCVAR_NOTIFY, "Overwrite the default game description. Set to 'default' to keep default description.");
 ConVar *g_SvMapName = CreateConVar("sv_mapname_override", "default", FCVAR_NOTIFY, "Overwrite the map name. Set to 'default' to keep default name.");
 ConVar *g_SvCountBotsInfo = CreateConVar("sv_count_bots_info", "1", FCVAR_NOTIFY, "Display bots as players in the a2s_info server query. Enable = '1', Disable = '0'");
@@ -216,6 +222,71 @@ bool (__thiscall *CIPRateLimit__CheckIP)(void *pThis, netadr_t adr);
 #endif
 
 //bool (*CBaseServer__ValidChallenge)(void *pThis, netadr_t adr, int challengeNr);
+
+/*
+ * Anti-spoofing query challenge, same idea as the one Valve added to the engine:
+ *   challenge = SipHash-2-4(secret, source ip | time slice), truncated to 32 bits.
+ * The secret is drawn from the OS CSPRNG at load and never leaves the process, so a
+ * client can only learn the challenge for its own IP by receiving our S2C_CHALLENGE.
+ * The current and the previous slice are accepted: a challenge stays valid 30-60s.
+ * netadr_t is IPv4 only on this engine branch (no IPv6 query socket), so only the
+ * 4 IPv4 bytes are hashed. The port is not hashed, like the engine.
+ */
+#define A2S_CHALLENGE_SLICE_SECONDS 30.0
+
+uint8_t g_QueryChallengeSecret[SIPHASH_KEY_SIZE];
+
+bool InitQueryChallengeSecret()
+{
+#ifdef _WIN32
+	return BCRYPT_SUCCESS(BCryptGenRandom(NULL, g_QueryChallengeSecret, sizeof(g_QueryChallengeSecret), BCRYPT_USE_SYSTEM_PREFERRED_RNG));
+#else
+	int fd = open("/dev/urandom", O_RDONLY);
+	if (fd < 0)
+		return false;
+
+	size_t got = 0;
+	while (got < sizeof(g_QueryChallengeSecret))
+	{
+		ssize_t n = read(fd, g_QueryChallengeSecret + got, sizeof(g_QueryChallengeSecret) - got);
+		if (n <= 0)
+			break;
+		got += n;
+	}
+	close(fd);
+
+	return got == sizeof(g_QueryChallengeSecret);
+#endif
+}
+
+uint32_t GetQueryChallengeSlice()
+{
+	return (uint32_t)(Plat_FloatTime() / A2S_CHALLENGE_SLICE_SECONDS);
+}
+
+int32_t GetQueryChallenge(const netadr_t &adr, uint32_t slice)
+{
+	uint8_t input[8];
+	memcpy(input, adr.ip, 4);
+	input[4] = slice & 0xFF;
+	input[5] = (slice >> 8) & 0xFF;
+	input[6] = (slice >> 16) & 0xFF;
+	input[7] = (slice >> 24) & 0xFF;
+
+	int32_t challengeNr = (int32_t)(uint32_t)SipHash24(g_QueryChallengeSecret, input, sizeof(input));
+
+	// -1 and 0 mean "send me a challenge" to a2s_player clients, never hand them out.
+	if (challengeNr == -1 || challengeNr == 0)
+		challengeNr = 1;
+
+	return challengeNr;
+}
+
+bool ValidQueryChallenge(const netadr_t &adr, int32_t challengeNr)
+{
+	uint32_t slice = GetQueryChallengeSlice();
+	return challengeNr == GetQueryChallenge(adr, slice) || challengeNr == GetQueryChallenge(adr, slice - 1);
+}
 
 struct CQueryCache
 {
@@ -370,7 +441,7 @@ bool ValidInfoChallenge( const netadr_t & adr, const char *nugget )
 	return true;
 }
 
-void SendA2S_PlayerChallenge(netpacket_t * packet, int32_t realChallengeNr)
+void SendA2S_Challenge(netpacket_t * packet, int32_t realChallengeNr)
 {
 	struct sockaddr	addr;
 	packet->from.ToSockadr ( &addr );
@@ -383,6 +454,15 @@ void SendA2S_PlayerChallenge(netpacket_t * packet, int32_t realChallengeNr)
 	buf.PutInt( realChallengeNr );
 
 	sendto(g_ServerUDPSocket, (const char*)buf.Base(), buf.TellPut(), 0, &addr, sizeof(addr));
+}
+
+// Answer an unproven source with a fresh challenge, but never with more bytes than it sent us.
+void ReplyQueryChallenge(netpacket_t * packet)
+{
+	if (packet->size < 9) // S2C_CHALLENGE is 9 bytes
+		return;
+
+	SendA2S_Challenge(packet, GetQueryChallenge(packet->from, GetQueryChallengeSlice()));
 }
 
 void SendA2S_Player(netpacket_t * packet)
@@ -534,14 +614,28 @@ bool Hook_ProcessConnectionlessPacket(netpacket_t * packet)
 				RETURN_META_VALUE(MRES_SUPERCEDE, false);
 			}
 
-			if (g_SvValidateChallenge->GetBool())
+			if (g_SvValidateChallenge->GetBool() || g_SvA2SChallenge->GetBool())
 			{
-				// Validate challenge
+				// Validate payload string, also needed to reach the challenge behind it
 				char nugget[ 64 ];
 				if ( !msg.ReadString( nugget, sizeof( nugget ) ) )
 					RETURN_META_VALUE(MRES_SUPERCEDE, true);
-				if ( !ValidInfoChallenge( packet->from, nugget ) )
+				if ( g_SvValidateChallenge->GetBool() && !ValidInfoChallenge( packet->from, nugget ) )
 					RETURN_META_VALUE(MRES_SUPERCEDE, true);
+			}
+
+			if (g_SvA2SChallenge->GetBool())
+			{
+				// "TSource Engine Query\0" [int32 challenge]
+				int32_t challengeNr = -1;
+				if (msg.GetNumBytesLeft() >= 4)
+					challengeNr = msg.ReadLong();
+
+				if (!ValidQueryChallenge(packet->from, challengeNr))
+				{
+					ReplyQueryChallenge(packet);
+					RETURN_META_VALUE(MRES_SUPERCEDE, true);
+				}
 			}
 
 			SendA2S_Info(packet);
@@ -561,6 +655,25 @@ bool Hook_ProcessConnectionlessPacket(netpacket_t * packet)
 				RETURN_META_VALUE(MRES_SUPERCEDE, false);
 			}
 
+			if (g_SvA2SChallenge->GetBool())
+			{
+				// A challenge-less (5 bytes) request would get a bigger answer, drop it.
+				if (packet->size < 9)
+					RETURN_META_VALUE(MRES_SUPERCEDE, true);
+
+				int32_t challengeNr = *(int32_t *)&packet->data[5];
+				if (!ValidQueryChallenge(packet->from, challengeNr))
+				{
+					ReplyQueryChallenge(packet);
+					RETURN_META_VALUE(MRES_SUPERCEDE, true);
+				}
+
+				SendA2S_Player(packet);
+
+				RETURN_META_VALUE(MRES_SUPERCEDE, true);
+			}
+
+			// Legacy behaviour (sv_qcache_a2s_challenge 0)
 			int32_t challengeNr = -1;
 			if(packet->size == 9)
 				challengeNr = *(int32_t *)&packet->data[5];
@@ -575,7 +688,7 @@ bool Hook_ProcessConnectionlessPacket(netpacket_t * packet)
 			int32_t realChallengeNr = *(int32_t *)&packet->from.ip ^ 0x55AADD88;
 			if(challengeNr != realChallengeNr)
 			{
-				SendA2S_PlayerChallenge(packet, realChallengeNr);
+				SendA2S_Challenge(packet, realChallengeNr);
 				RETURN_META_VALUE(MRES_SUPERCEDE, true);
 			}
 
@@ -620,6 +733,12 @@ T ResolveRipRelative(void *base, int offset)
 
 bool A2SQCache::SDK_OnLoad(char *error, size_t maxlen, bool late)
 {
+	if(!InitQueryChallengeSecret())
+	{
+		snprintf(error, maxlen, "Failed to generate the query challenge secret.\n");
+		return false;
+	}
+
 	char conf_error[255] = "";
 	if(!gameconfs->LoadGameConfigFile("a2sqcache.games", &g_pGameConf, conf_error, sizeof(conf_error)))
 	{
@@ -820,6 +939,8 @@ void A2SQCache::SDK_OnUnload()
 		timersys->KillTimer(g_pA2SQCacheTimer);
 
 	gameconfs->CloseGameConfigFile(g_pGameConf);
+
+	memset(g_QueryChallengeSecret, 0, sizeof(g_QueryChallengeSecret));
 }
 
 bool A2SQCache::RegisterConCommandBase(ConCommandBase *pVar)
