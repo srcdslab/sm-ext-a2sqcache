@@ -178,7 +178,7 @@ typedef struct
 #else
 	bool		bListening;	// true if TCP port is listening
 	int			hUDP;		// handle to UDP socket from socket()
-	int			hTCP;		// handle to TCP socket from socket()
+	void		*pFakeUDPPort;	// ISteamNetworkingFakeUDPPort * (Steam Datagram Relay): 24-byte element on x86_64
 #endif
 } netsocket_t;
 
